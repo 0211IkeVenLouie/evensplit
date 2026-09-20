@@ -1,0 +1,127 @@
+<%- include('partials/head', { title: group.name + ' — Evensplit' }) %>
+<%- include('partials/nav', { active: 'expenses', group: group }) %>
+<main class="wrap page">
+  <div class="page-head">
+    <h1><%= group.name %></h1>
+    <span class="badge badge-quiet"><%= ledger.members.length %> people</span>
+    <span class="spacer"></span>
+    <a class="btn btn-sm" href="/g/<%= group.slug %>/balances">Settle up →</a>
+  </div>
+
+  <div class="summary">
+    <div class="stat">
+      <div class="label">Total spent</div>
+      <div class="value"><%= formatMoney(ledger.totalSpentCents, group.currency) %></div>
+    </div>
+    <div class="stat">
+      <div class="label">Expenses</div>
+      <div class="value"><%= ledger.expenses.length %></div>
+    </div>
+    <div class="stat">
+      <div class="label">Payments to settle</div>
+      <div class="value"><%= ledger.transfers.length %></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <section>
+      <h2>Expenses</h2>
+      <% if (ledger.expenses.length === 0) { %>
+        <div class="empty">
+          <strong>No expenses yet.</strong>
+          Add the first one and the balances will work themselves out.
+          <div style="margin-top: 14px;">
+            <a class="btn btn-primary" href="/g/<%= group.slug %>/expenses/new">Add an expense</a>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="list">
+          <% ledger.expenses.forEach(function (expense) { %>
+            <div class="list-item">
+              <span class="grow">
+                <strong><%= expense.description %></strong>
+                <div class="small muted">
+                  <%= nameOf(expense.paidByMemberId) %> paid ·
+                  <% if (expense.splitMode === 'equal') { %>split evenly between <%= expense.shares.length %><% }
+                     else { %>split by <%= expense.splitMode %><% } %>
+                </div>
+                <div class="small faint" style="margin-top: 3px;">
+                  <% expense.shares.forEach(function (share, i) { %><%= i ? ' · ' : '' %><%= nameOf(share.memberId) %> <%= formatMoney(share.shareCents, group.currency) %><% }) %>
+                </div>
+              </span>
+              <span class="date"><%= expense.spentOn %></span>
+              <span class="money"><%= formatMoney(expense.amountCents, group.currency) %></span>
+              <form method="post" action="/g/<%= group.slug %>/expenses/<%= expense.id %>/delete"
+                    onsubmit="return confirm('Delete this expense?');">
+                <button class="btn btn-sm btn-ghost" type="submit" aria-label="Delete expense">×</button>
+              </form>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <% if (ledger.settlements.length > 0) { %>
+        <h2 style="margin-top: 30px;">Payments made</h2>
+        <div class="list">
+          <% ledger.settlements.forEach(function (settlement) { %>
+            <div class="list-item">
+              <span class="grow">
+                <strong><%= nameOf(settlement.fromMemberId) %></strong>
+                <span class="muted">paid</span>
+                <strong><%= nameOf(settlement.toMemberId) %></strong>
+                <% if (settlement.note) { %><div class="small faint"><%= settlement.note %></div><% } %>
+              </span>
+              <span class="money"><%= formatMoney(settlement.amountCents, group.currency) %></span>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h2>Where everyone stands</h2>
+        <% ledger.balances.forEach(function (balance) { %>
+          <div class="balance-row">
+            <span style="min-width: 70px;"><%= nameOf(balance.memberId) %></span>
+            <span class="bar">
+              <% var widest = Math.max.apply(null, ledger.balances.map(function (b) { return Math.abs(b.cents); }).concat([1])); %>
+              <% var pct = Math.min(50, Math.abs(balance.cents) / widest * 50); %>
+              <% if (balance.cents > 0) { %><span class="pos" style="width: <%= pct %>%"></span><% } %>
+              <% if (balance.cents < 0) { %><span class="neg" style="width: <%= pct %>%"></span><% } %>
+            </span>
+            <span class="money <%= balance.cents > 0 ? 'money-pos' : balance.cents < 0 ? 'money-neg' : 'money-zero' %>">
+              <%= balance.cents > 0 ? '+' : '' %><%= formatMoney(balance.cents, group.currency) %>
+            </span>
+          </div>
+        <% }) %>
+        <p class="hint">Positive means the group owes them.</p>
+      </div>
+
+      <div class="card" style="margin-top: 18px;">
+        <h2>People</h2>
+        <div class="list" style="margin-bottom: 14px;">
+          <% ledger.members.forEach(function (member) { %>
+            <div class="list-item" style="padding: 8px 12px;">
+              <span class="grow"><%= member.name %></span>
+              <form method="post" action="/g/<%= group.slug %>/members/<%= member.id %>/delete">
+                <button class="btn btn-sm btn-ghost" type="submit" aria-label="Remove <%= member.name %>">Remove</button>
+              </form>
+            </div>
+          <% }) %>
+        </div>
+        <form method="post" action="/g/<%= group.slug %>/members" class="row">
+          <input type="text" name="name" placeholder="Add someone" maxlength="60" required />
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top: 18px;">
+        <h2>Share this group</h2>
+        <p class="small muted">Anyone with the link can add expenses.</p>
+        <code class="small"><%= baseUrl %>/g/<%= group.slug %></code>
+      </div>
+    </aside>
+  </div>
+</main>
+</body></html>

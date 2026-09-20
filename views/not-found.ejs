@@ -1,0 +1,10 @@
+<%- include('partials/head', { title: 'Not found — Evensplit' }) %>
+<%- include('partials/nav', { active: '', group: null }) %>
+<main class="wrap narrow page">
+  <div class="empty">
+    <strong><%= typeof message !== 'undefined' ? message : 'That page does not exist.' %></strong>
+    Group links are random and unlisted, so a typo lands here.
+    <div style="margin-top: 16px;"><a class="btn" href="/">Start a group</a></div>
+  </div>
+</main>
+</body></html>

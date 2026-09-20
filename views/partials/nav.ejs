@@ -1,0 +1,16 @@
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/"><span class="brand-dot"></span> Evensplit</a>
+    <% if (typeof group !== 'undefined' && group) { %>
+      <nav class="nav">
+        <a href="/g/<%= group.slug %>" class="<%= active === 'expenses' ? 'active' : '' %>">Expenses</a>
+        <a href="/g/<%= group.slug %>/balances" class="<%= active === 'balances' ? 'active' : '' %>">Balances</a>
+      </nav>
+    <% } %>
+    <span class="spacer"></span>
+    <% if (typeof group !== 'undefined' && group) { %>
+      <span class="small muted"><%= group.name %></span>
+      <a class="btn btn-sm btn-primary" href="/g/<%= group.slug %>/expenses/new">Add expense</a>
+    <% } %>
+  </div>
+</header>

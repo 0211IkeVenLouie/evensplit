@@ -1,0 +1,123 @@
+<%- include('partials/head', { title: 'Settle up — ' + group.name }) %>
+<%- include('partials/nav', { active: 'balances', group: group }) %>
+<main class="wrap page">
+  <div class="page-head">
+    <h1>Settle up</h1>
+    <span class="spacer"></span>
+    <span class="small muted"><%= formatMoney(ledger.totalSpentCents, group.currency) %> spent in total</span>
+  </div>
+  <% if (error) { %><div class="notice"><%= error %></div><% } %>
+
+  <div class="grid-2">
+    <section>
+      <h2>
+        <% if (ledger.transfers.length === 0) { %>Nothing to settle<% } else { %>
+          <%= ledger.transfers.length %> payment<%= ledger.transfers.length === 1 ? '' : 's' %> clears everybody
+        <% } %>
+      </h2>
+
+      <% if (ledger.transfers.length === 0) { %>
+        <div class="empty">
+          <strong>Everyone is square.</strong>
+          <% if (ledger.expenses.length === 0) { %>
+            There are no expenses in this group yet.
+          <% } else { %>
+            Add another expense and the plan will reappear here.
+          <% } %>
+        </div>
+      <% } else { %>
+        <p class="muted small">
+          <% var nonZero = ledger.balances.filter(function (b) { return b.cents !== 0; }).length; %>
+          <%= nonZero %> people have a balance, so a naive "everyone pays everyone they owe"
+          would take more. This is the fewest payments that settles the group.
+        </p>
+        <div class="list">
+          <% ledger.transfers.forEach(function (transfer) { %>
+            <div class="transfer">
+              <strong><%= nameOf(transfer.fromMemberId) %></strong>
+              <span class="arrow">pays →</span>
+              <strong><%= nameOf(transfer.toMemberId) %></strong>
+              <span class="spacer"></span>
+              <span class="money"><%= formatMoney(transfer.cents, group.currency) %></span>
+              <form method="post" action="/g/<%= group.slug %>/settlements">
+                <input type="hidden" name="fromMemberId" value="<%= transfer.fromMemberId %>" />
+                <input type="hidden" name="toMemberId" value="<%= transfer.toMemberId %>" />
+                <input type="hidden" name="amount" value="<%= formatAmount(transfer.cents) %>" />
+                <input type="hidden" name="note" value="Settled up" />
+                <button class="btn btn-sm btn-primary" type="submit">Mark as paid</button>
+              </form>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <h2 style="margin-top: 30px;">Balances</h2>
+      <div class="card">
+        <% ledger.balances.forEach(function (balance) { %>
+          <div class="balance-row">
+            <span style="min-width: 80px;"><%= nameOf(balance.memberId) %></span>
+            <span class="muted small grow">
+              <% if (balance.cents > 0) { %>is owed<% } else if (balance.cents < 0) { %>owes<% } else { %>is settled<% } %>
+            </span>
+            <span class="money <%= balance.cents > 0 ? 'money-pos' : balance.cents < 0 ? 'money-neg' : 'money-zero' %>">
+              <%= formatMoney(Math.abs(balance.cents), group.currency) %>
+            </span>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h2>Record a payment</h2>
+        <p class="small muted">Someone paid outside the app? Note it here and the balances update.</p>
+        <form method="post" action="/g/<%= group.slug %>/settlements">
+          <div class="field">
+            <label for="fromMemberId">From</label>
+            <select id="fromMemberId" name="fromMemberId" required>
+              <% ledger.members.forEach(function (member) { %><option value="<%= member.id %>"><%= member.name %></option><% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label for="toMemberId">To</label>
+            <select id="toMemberId" name="toMemberId" required>
+              <% ledger.members.forEach(function (member, index) { %>
+                <option value="<%= member.id %>" <%= index === 1 ? 'selected' : '' %>><%= member.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field">
+            <label for="amount">Amount</label>
+            <input type="text" id="amount" name="amount" inputmode="decimal" placeholder="25.00" required />
+          </div>
+          <div class="field">
+            <label for="note">Note</label>
+            <input type="text" id="note" name="note" placeholder="Bank transfer" maxlength="200" />
+          </div>
+          <button class="btn" type="submit">Record payment</button>
+        </form>
+      </div>
+
+      <% if (ledger.settlements.length > 0) { %>
+        <div class="card" style="margin-top: 18px;">
+          <h2>Already paid</h2>
+          <div class="list">
+            <% ledger.settlements.forEach(function (settlement) { %>
+              <div class="list-item" style="padding: 8px 12px;">
+                <span class="grow small">
+                  <%= nameOf(settlement.fromMemberId) %> → <%= nameOf(settlement.toMemberId) %>
+                  <% if (settlement.note) { %><div class="faint"><%= settlement.note %></div><% } %>
+                </span>
+                <span class="money small"><%= formatMoney(settlement.amountCents, group.currency) %></span>
+                <form method="post" action="/g/<%= group.slug %>/settlements/<%= settlement.id %>/delete">
+                  <button class="btn btn-sm btn-ghost" type="submit" aria-label="Undo payment">×</button>
+                </form>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</main>
+</body></html>

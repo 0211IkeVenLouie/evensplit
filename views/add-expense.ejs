@@ -1,0 +1,86 @@
+<%- include('partials/head', { title: 'Add an expense — ' + group.name }) %>
+<%- include('partials/nav', { active: 'expenses', group: group }) %>
+<main class="wrap narrow page" style="max-width: 560px;">
+  <h1>Add an expense</h1>
+  <% if (error) { %><div class="notice"><%= error %></div><% } %>
+
+  <% if (ledger.members.length === 0) { %>
+    <div class="empty">
+      <strong>Add some people first.</strong>
+      An expense needs somebody to have paid it.
+      <div style="margin-top: 14px;"><a class="btn" href="/g/<%= group.slug %>">Back to the group</a></div>
+    </div>
+  <% } else { %>
+  <form method="post" action="/g/<%= group.slug %>/expenses" class="card" id="expense-form"
+        data-currency="<%= group.currency %>">
+    <div class="field">
+      <label for="description">What was it?</label>
+      <input type="text" id="description" name="description" value="<%= values.description || '' %>"
+             placeholder="Dinner at Ramiro" required autofocus maxlength="200" />
+    </div>
+
+    <div class="row">
+      <div class="field" style="flex: 1;">
+        <label for="amount">How much?</label>
+        <input type="text" id="amount" name="amount" inputmode="decimal"
+               value="<%= values.amount || '' %>" placeholder="164.00" required />
+      </div>
+      <div class="field" style="flex: 1;">
+        <label for="spentOn">When?</label>
+        <input type="date" id="spentOn" name="spentOn" value="<%= (values.raw && values.raw.spentOn) || '' %>" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="paidBy">Who paid?</label>
+      <select id="paidBy" name="paidBy" required>
+        <% ledger.members.forEach(function (member) { %>
+          <option value="<%= member.id %>" <%= values.paidBy === member.id ? 'selected' : '' %>><%= member.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Split between</label>
+      <div class="row" style="flex-wrap: wrap; gap: 8px;">
+        <% ledger.members.forEach(function (member) {
+             var checked = values.participants ? values.participants.indexOf(member.id) !== -1 : true; %>
+          <label class="who-chip">
+            <input type="checkbox" name="participants" value="<%= member.id %>" <%= checked ? 'checked' : '' %>
+                   data-member="<%= member.id %>" />
+            <%= member.name %>
+          </label>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="mode">How?</label>
+      <select id="mode" name="mode">
+        <option value="equal" <%= values.mode === 'equal' || !values.mode ? 'selected' : '' %>>Evenly</option>
+        <option value="shares" <%= values.mode === 'shares' ? 'selected' : '' %>>By shares (2 = counts double)</option>
+        <option value="percent" <%= values.mode === 'percent' ? 'selected' : '' %>>By percentage</option>
+        <option value="exact" <%= values.mode === 'exact' ? 'selected' : '' %>>Exact amounts</option>
+      </select>
+    </div>
+
+    <div class="field" id="split-values" hidden>
+      <div class="split-grid">
+        <% ledger.members.forEach(function (member) { %>
+          <label class="split-label" data-member="<%= member.id %>" for="value_<%= member.id %>"><%= member.name %></label>
+          <input type="text" class="split-input" data-member="<%= member.id %>"
+                 id="value_<%= member.id %>" name="value_<%= member.id %>" inputmode="decimal"
+                 value="<%= (values.raw && values.raw['value_' + member.id]) || '' %>" />
+        <% }) %>
+        <div class="split-total" id="split-total"></div>
+      </div>
+    </div>
+
+    <p class="hint" id="preview"></p>
+    <button class="btn btn-primary" type="submit">Add expense</button>
+    <a class="btn btn-ghost" href="/g/<%= group.slug %>">Cancel</a>
+  </form>
+  <% } %>
+</main>
+<script src="/expense.js" type="module"></script>
+</body></html>
