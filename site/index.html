@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Evensplit — Shared expenses, settled in as few payments as possible</title>
+<meta name="description" content="Add who paid for what, split it evenly or not, and get back the shortest list of payments that clears everybody." />
+<meta property="og:title" content="Evensplit — Shared expenses, settled in as few payments as possible" />
+<meta property="og:description" content="Add who paid for what, split it evenly or not, and get back the shortest list of payments that clears everybody." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%23b45309'/></svg>" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <span class="dot"></span>
+    <span class="name">Evensplit</span>
+    <span class="spacer"></span>
+    <a href="https://github.com/0211IkeVenLouie/evensplit">Source</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="tagline">Shared expenses, settled in as few payments as possible</p>
+    <h1>Split the bill. Settle it in as few payments as possible.</h1>
+    <p class="lede">Add who paid for what, split it evenly or not, and get back the shortest list of payments that clears everybody.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/0211IkeVenLouie/evensplit">Read the code →</a>
+      <a class="btn" href="#run">Run it in one command</a>
+    </div>
+    <div class="meta">
+      <span class="chip">34 tests passing</span>
+      <span class="chip-quiet chip">Node 22 · TypeScript · Express · Postgres 16</span>
+    </div>
+  </section>
+
+  <figure>
+    <img src="settle-up.png" alt="The settle-up page: three payments clear a four-person group" />
+    <figcaption>The settle-up page: three payments clear a four-person group</figcaption>
+  </figure>
+
+  <h2>The hard part</h2>
+  <p class="question">Three people split €100. Who gets the extra cent — and what is the fewest payments that settles everyone?</p>
+  
+    <h3>1. Money is an integer, and splitting it is not division</h3>
+  <p>Every amount is a whole number of cents. <code>0.1 + 0.2 !== 0.3</code> is the famous reason to avoid floats, but the one that bites a splitter is that €33.333… cannot be represented by anything that also adds back up to €100. There is no rounding rule that fixes it — you have to <em>decide</em> who gets the odd cent.</p>
+  <h3>2. Largest remainder, deterministically</h3>
+  <p>Everyone gets the floor of their exact share, then leftover cents go out one at a time, largest fractional part first, ties broken by position. €100 between three → <code>[3334, 3333, 3333]</code>. Deterministic matters: the same expense splits the same way every render, so nobody reloads and finds they owe a different cent than their friend’s screen says.</p>
+  <h3>3. The fewest transfers, and why greedy is not the answer</h3>
+  <p>With <strong>n</strong> people holding a balance, settling takes <strong>n − k</strong> transfers, where k is the largest number of groups they can be partitioned into whose balances each sum to zero. Maximising k is subset-sum in a hat — NP-hard. Most implementations stop at greedy (largest debtor pays largest creditor). Usually right. Not always:</p>
+    <pre><code>Ana −6.00   Ben −6.00   Cal −4.00   Dee +10.00   Eve +6.00
+
+greedy:  4 payments
+optimal: 3 payments   (Ana and Eve cancel exactly; greedy never notices)</code></pre>
+  <p>That case is a test, not a footnote. A bitmask DP over all 2ⁿ subsets finds the true minimum for groups up to 16 — every dinner, house share and holiday — and falls back to greedy above that. The randomised test asserts the plan always settles everyone, never exceeds n − 1 transfers, and is never worse than greedy.</p>
+    <h3>A settlement is not a special case</h3>
+  <p>Paying someone back is the same kind of fact as paying for dinner: <code>balance = paid − share + payments made − payments received</code>. No debt table, no state machine to fall out of sync. Because every term appears once positive and once negative, balances provably sum to zero — and the solver throws if they ever don’t, because that means a bug here.</p>
+
+  <h2 id="run">Running it</h2>
+  <p>It is a server application — Postgres, sessions, and a ledger that has to balance to the cent. This page is a static showcase; the app itself needs somewhere to run. One command does it:</p>
+  <pre><code>git clone https://github.com/0211IkeVenLouie/evensplit
+cd evensplit
+docker compose up</code></pre>
+  <p>That brings up Postgres, runs the migrations and seeds a demo with real data in it, so there is something to look at the moment it boots.</p>
+
+  <h2>See it for yourself</h2>
+  <ol class="steps">
+    <li>Add an expense split three ways and check the shares add up to the bill exactly.</li>
+    <li>Try entering <code>12.345</code>. It is rejected, not rounded.</li>
+    <li>Watch the settle-up plan collapse a chain: if Ana owes Ben and Ben owes Cal, Ana pays Cal and Ben never touches the money.</li>
+  </ol>
+
+  <h2>Also in this set</h2>
+  <div class="others">
+    <a class="other" href="https://0211ikevenlouie.github.io/pulseboard/"><span><span class="t">Pulseboard</span><br /><span class="d">Real-time retro and kanban boards</span></span></a>
+    <a class="other" href="https://0211ikevenlouie.github.io/slotline/"><span><span class="t">Slotline</span><br /><span class="d">Availability and booking pages</span></span></a>
+  </div>
+
+  <div class="callout">
+    <strong>Honest about what this page is.</strong>
+    A static showcase on GitHub Pages. The interesting behaviour described above — the database constraint, the server-side masking, the conflict resolution — happens on a server, and a static page cannot fake it without contradicting every claim on it.
+  </div>
+</main>
+
+<footer class="wrap">
+  <p>Built by Ike Ven Louie Anicete · MIT licensed · <a href="https://github.com/0211IkeVenLouie/evensplit">github.com/0211IkeVenLouie/evensplit</a></p>
+</footer>
+</body>
+</html>
