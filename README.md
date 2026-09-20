@@ -152,11 +152,13 @@ through Postgres and checks the books still balance.
 
 ## Deploying
 
-```bash
-fly launch --no-deploy
-fly postgres create && fly postgres attach <db-name>
-fly deploy
-```
+One click on Render — there is a `render.yaml` that creates the database and
+the web service together. Railway and Fly.io instructions are in
+[DEPLOY.md](DEPLOY.md).
+
+The app boots with nothing but `DATABASE_URL`: migrations run on startup and
+the demo data seeds itself, so a fresh deploy has something to look at
+straight away.
 
 Migrations run on boot.
 
