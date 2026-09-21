@@ -1,52 +1,82 @@
 <%- include('partials/head', { title: 'Evensplit — split expenses, settle in fewer payments' }) %>
 <%- include('partials/nav', { active: '', group: null }) %>
-<main class="wrap narrow page">
-  <h1>Split the bill. Settle it in as few payments as possible.</h1>
-  <p class="muted" style="font-size: 1.05rem;">
-    Add who paid for what, split it evenly or not, and Evensplit works out the shortest
-    set of payments that clears everybody. Amounts are whole cents, so three people
-    splitting €100 owe €33.34, €33.33 and €33.33 — never €33.33 three times with a cent
-    quietly missing.
-  </p>
 
-  <div style="display:flex; gap:10px; margin:26px 0 40px; flex-wrap:wrap;">
-    <a class="btn btn-primary" href="<%= demoSlug ? '/g/' + demoSlug : '/demo' %>">Open the demo group →</a>
-    <a class="btn" href="#new">Start your own</a>
-  </div>
+<main class="wrap narrow">
+  <section class="hero">
+    <h1>Split the bill. <span class="gradient-text">Settle it in fewer payments.</span></h1>
+    <p class="lede">
+      Add who paid for what, split it evenly or not, and Evensplit works out the shortest
+      set of payments that clears everybody. Amounts are whole cents, so three people
+      splitting €100 owe €33.34, €33.33 and €33.33 — never €33.33 three times with a cent
+      quietly missing.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="<%= demoSlug ? '/g/' + demoSlug : '/demo' %>">Open the demo group →</a>
+      <a class="btn" href="#new">Start your own</a>
+    </div>
+    <div class="chips">
+      <span class="chip">Integer cents</span>
+      <span class="chip">Uneven splits</span>
+      <span class="chip">Fewest transfers</span>
+      <span class="chip">No signup</span>
+    </div>
+  </section>
 
-  <div class="card" id="new">
-    <h2>New group</h2>
-    <form method="post" action="/groups">
-      <div class="field">
-        <label for="name">What is it for?</label>
-        <input type="text" id="name" name="name" placeholder="Lisbon weekend" maxlength="120" required />
-      </div>
-      <div class="field">
-        <label for="members">Who is in it?</label>
-        <textarea id="members" name="members" rows="3" placeholder="Ana, Ben, Cal, Dee"></textarea>
-        <p class="hint">One name per line, or separated by commas. You can add more later.</p>
-      </div>
-      <div class="field" style="max-width: 160px;">
-        <label for="currency">Currency</label>
-        <select id="currency" name="currency">
-          <option>USD</option><option>EUR</option><option>GBP</option>
-          <option>PHP</option><option>JPY</option><option>AUD</option><option>CAD</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" type="submit">Create group</button>
-      <p class="hint">No signup. Anyone with the link can add expenses.</p>
-    </form>
-  </div>
+  <section class="section" id="new">
+    <div class="card">
+      <h2>New group</h2>
+      <form method="post" action="/groups">
+        <div class="field">
+          <label for="name">What is it for?</label>
+          <input type="text" id="name" name="name" placeholder="Lisbon weekend" maxlength="120" required />
+        </div>
+        <div class="field">
+          <label for="members">Who is in it?</label>
+          <textarea id="members" name="members" rows="3" placeholder="Ana, Ben, Cal, Dee"></textarea>
+          <p class="hint">One name per line, or separated by commas. You can add more later.</p>
+        </div>
+        <div class="field" style="max-width: 170px;">
+          <label for="currency">Currency</label>
+          <select id="currency" name="currency">
+            <option>USD</option><option>EUR</option><option>GBP</option>
+            <option>PHP</option><option>JPY</option><option>AUD</option><option>CAD</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit">Create group</button>
+        <p class="hint">No signup. Anyone with the link can add expenses.</p>
+      </form>
+    </div>
+  </section>
 
-  <h2 style="margin-top: 44px;">What is actually hard here</h2>
-  <p class="muted">
-    Two things. <strong>Money in integers</strong> — every amount is a whole number of
-    cents, split with the largest-remainder method so the parts always add back up to the
-    bill exactly. And <strong>fewest transfers</strong> — collapsing a web of debts into a
-    minimal set of payments is subset-sum in disguise, so Evensplit solves it exactly for
-    normal-sized groups and falls back to a greedy match for large ones.
-    <a href="https://github.com/<%= process.env.GITHUB_REPO || '0211IkeVenLouie/evensplit' %>#the-hard-part">Read the write-up →</a>
-  </p>
+  <section class="section">
+    <p class="section-label">What is actually hard here</p>
+    <h2>Three people split €100. Who gets the extra cent?</h2>
+    <div class="split" style="margin-top: 18px;">
+      <div class="feature">
+        <div class="feature-icon">¢</div>
+        <h3>Money is an integer</h3>
+        <p>Every amount is whole cents. €33.333… cannot be represented by anything that also adds back up to €100, so somebody has to be chosen.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">=</div>
+        <h3>Largest remainder</h3>
+        <p>Floors first, then leftover cents by fractional part, ties by position — so the same expense splits the same way every time.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">↘</div>
+        <h3>Fewest transfers</h3>
+        <p>Minimising payments means maximising zero-sum subsets, which is NP-hard. A bitmask DP solves it exactly for real-sized groups.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">∑</div>
+        <h3>No debt state machine</h3>
+        <p>A settlement is just another term in the balance sum, so there is nothing to fall out of sync.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 18px;">
+      <a href="https://github.com/0211IkeVenLouie/evensplit#the-hard-part">Read the full write-up →</a>
+    </p>
+  </section>
 </main>
 <footer class="site wrap"><span class="faint">Evensplit · Node, Postgres</span></footer>
 </body></html>
