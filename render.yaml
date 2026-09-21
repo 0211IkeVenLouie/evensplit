@@ -1,15 +1,14 @@
-# Render Blueprint — one click creates the database and the web service.
+# Render Blueprint.
 #
 #   render.com -> New -> Blueprint -> pick this repository -> Apply
 #
-# Nothing else to configure: DATABASE_URL is wired from the database below,
-# migrations run on boot, and the demo data seeds itself.
-databases:
-  - name: evensplit-db
-    databaseName: evensplit
-    user: evensplit
-    plan: free
-
+# Render's free tier allows exactly ONE Postgres database per account, so this
+# blueprint does not create one. Point DATABASE_URL at a database you already
+# have — the one pulseboard's blueprint created is fine — and this app keeps to
+# its own schema, so nothing collides.
+#
+# Render will prompt for DATABASE_URL when you apply the blueprint. Paste the
+# "Internal Database URL" from that database's page in the Render dashboard.
 services:
   - type: web
     name: evensplit
@@ -19,8 +18,8 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: evensplit-db
-          property: connectionString
+        sync: false        # you supply this
+      - key: DB_SCHEMA
+        value: evensplit
       - key: SEED_DEMO
         value: "true"

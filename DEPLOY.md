@@ -4,20 +4,22 @@ The app needs somewhere that runs a Node process and a Postgres database. It
 boots with nothing but `DATABASE_URL`; migrations run on startup and the demo
 data seeds itself, so a fresh deploy has something to look at immediately.
 
-## Render — one click
+## Render — one click, with one prerequisite
 
-There is a `render.yaml` in this repo, so Render creates both the database and
-the web service for you.
+Render's free tier allows **one** Postgres database per account, so this
+blueprint does not try to create one. It expects you to point it at a database
+you already have; this app keeps to its own schema (`DB_SCHEMA=evensplit`), so
+sharing a database with other apps collides with nothing — not even the
+migration bookkeeping.
 
-1. Sign in at [render.com](https://render.com) with GitHub.
-2. **New → Blueprint**.
-3. Pick the `evensplit` repository.
+1. Open the existing database in the Render dashboard and copy its
+   **Internal Database URL**.
+2. **New → Blueprint**, pick the `evensplit` repository.
+3. When Render prompts for `DATABASE_URL`, paste that URL.
 4. **Apply**.
 
-That is the whole setup. `DATABASE_URL` is wired from the database defined in
-the blueprint, and `/healthz` is the health check.
-
-The URL Render gives you goes in the README, replacing the demo placeholder.
+If you do have a spare database allowance, adding a `databases:` block to
+`render.yaml` and wiring `DATABASE_URL` with `fromDatabase` works too.
 
 ## Railway
 
