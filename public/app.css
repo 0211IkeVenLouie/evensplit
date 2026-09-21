@@ -326,7 +326,7 @@ footer.site { padding: 40px 0; color: var(--ink-faint); font-size: 0.86rem; }
 .nav a:hover { text-decoration: none; background: var(--surface-hover); color: var(--ink); }
 .nav a.active { color: var(--accent); background: var(--accent-tint); }
 
-.page { padding: 32px 0 72px; }
+.page { padding-block: 32px 72px; }
 .page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
 .page-head h1 { margin: 0; font-size: 1.55rem; }
 
